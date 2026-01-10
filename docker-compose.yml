@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  rag-app:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      # host.docker.internal allows access to the host machine's localhost (where Ollama is likely running)
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t

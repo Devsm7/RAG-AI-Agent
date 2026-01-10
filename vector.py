@@ -8,8 +8,8 @@ import pandas as pd
 
 
 # Load both CSV files
-bootcamps_df = pd.read_csv(r"C:\Users\user\Desktop\BootCamp\RAG AI Agent\bootcamps_db.csv")
-places_df = pd.read_csv(r"C:\Users\user\Desktop\BootCamp\RAG AI Agent\places_db.csv")
+bootcamps_df = pd.read_csv(r"datasets\bootcamps_db.csv")
+places_df = pd.read_csv(r"datasets\places_db.csv")
 
 # Merge bootcamps with places data on place_id
 merged_df = bootcamps_df.merge(places_df, left_on='place_id', right_on='id', suffixes=('_bootcamp', '_place'))
@@ -31,7 +31,7 @@ if add_documents:
             f"Bootcamp: {row['name_bootcamp']}, "
             f"Students: {row['number_of_students']}, "
             f"Time: {row['start_time']} to {row['end_time']}, "
-            f"Location: {row['name_place']} (Room ID: {row['place_id']}), "
+            f"Location: {row['name_place']}"
             f"Category: {row['category']}, "
             f"Floor: {row['floor']}, "
             f"Corridor: {row['corridor']}"
@@ -47,7 +47,6 @@ if add_documents:
                 "start_time": str(row['start_time']),
                 "end_time": str(row['end_time']),
                 "place_name": row['name_place'],
-                "place_id": row['place_id'],
                 "category": row['category'],
                 "floor": row['floor'],
                 "corridor": row['corridor']
@@ -65,7 +64,6 @@ if add_documents:
             f"Category: {row['category']}, "
             f"Floor: {row['floor']}, "
             f"Corridor: {row['corridor']}, "
-            f"Place ID: {row['id']}"
         )
         
         document = Document(
@@ -74,7 +72,6 @@ if add_documents:
             metadata={
                 "type": "place",
                 "place_name": row['name'],
-                "place_id": row['id'],
                 "category": row['category'],
                 "floor": row['floor'],
                 "corridor": row['corridor']
