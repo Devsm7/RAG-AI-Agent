@@ -8,8 +8,8 @@ import pandas as pd
 
 
 # Load both CSV files
-bootcamps_df = pd.read_csv(r"datasets\bootcamps_db.csv")
-places_df = pd.read_csv(r"datasets\places_db.csv")
+bootcamps_df = pd.read_csv("datasets/bootcamps_db.csv")
+places_df = pd.read_csv("datasets/places_db.csv")
 
 # Merge bootcamps with places data on place_id
 merged_df = bootcamps_df.merge(places_df, left_on='place_id', right_on='id', suffixes=('_bootcamp', '_place'))
