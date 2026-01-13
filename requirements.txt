@@ -1,0 +1,15 @@
+langchain
+langchain-ollama
+langchain-chroma
+pandas
+langchain-community
+sounddevice
+soundfile
+numpy
+gradio
+fastapi
+uvicorn[standard]
+python-multipart
+langchain-huggingface
+sentence-transformers
+faster-whisper
