@@ -18,12 +18,12 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
-from vector import retriever
+from vector import vector_store, get_retriever
 from speech_to_text import SpeechToText
 
 # Initialize Speech-to-Text with faster-whisper
 stt = SpeechToText(
-    whisper_model="small",      # small is good balance of speed/accuracy
+    whisper_model="medium",      # small is good balance of speed/accuracy
     device="cpu",               # use "cuda" if you have GPU
     compute_type="int8"         # int8 for CPU, float16 for GPU
 )
@@ -45,30 +45,37 @@ app.add_middleware(
 )
 
 # Initialize Chat Model
-model = ChatOllama(model='aya:8b')
+model = ChatOllama(model='llama3.2')
 
-# Define Prompt with History (Bilingual Support)
-prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are a helpful bilingual assistant for Twuaiq Academy (أكاديمية طويق). 
+# System Prompts
+SYSTEM_PROMPT_EN = """You are a helpful assistant for Twuaiq Academy.
+Your goal is to answer questions about bootcamps, places, and times based ONLY on the context provided.
 
-Instructions:
-- Detect the language of the user's question (English or Arabic)
-- Respond in the SAME language as the question
-- Answer simply and directly using only the provided context
-- Do NOT repeat the question
-- Do NOT mention any internal IDs (like place_id or bootcamp_id)
-- If the answer is not in the context, state that you don't know
+CORE RULE: You are currently in ENGLISH mode. You must respond ONLY in English.
+Ignore any Arabic text in the chat history. Focus only on the current question and the context.
 
-Important:
-- If the context contains time in 24-hour format (e.g., 14:00), convert it to 12-hour format with AM/PM (e.g., 2:00 PM) for English or (2:00 مساءً) for Arabic
+Context Instructions:
+- The context contains bilingual data. Select the English information.
+- Convert 24-hour time (e.g., 14:00) to 12-hour AM/PM.
 
-Context: {bootcamps}"""),
-    MessagesPlaceholder(variable_name="chat_history"),
-    ("human", "{question}"),
-])
 
-# Create Chain
-chain = prompt | model
+Context: {bootcamps}"""
+
+SYSTEM_PROMPT_AR = """أنت مساعد ذكي لأكاديمية طويق.
+هدف هو الإجابة على الأسئلة حول المعسكرات والأماكن والأوقات بناءً فقط على السياق المقدم.
+
+القاعدة الأساسية: أنت تتحدث العربية فقط. يجب أن تكون إجابتك بالعربية فقط.
+تجاهل أي نص إنجليزي في سجل المحادثة. ركز فقط على السؤال الحالي والسياق.
+
+تعليمات السياق:
+- السياق يحتوي على معلومات بلغتين. اختر المعلومات العربية.
+- قم بتحويل الوقت من نظام 24 ساعة إلى نظام 12 ساعة (مثلاً 2:00 مساءً).
+
+السياق: {bootcamps}"""
+
+def is_arabic(text: str) -> bool:
+    """Check if text contains Arabic characters"""
+    return any('\u0600' <= char <= '\u06FF' for char in text)
 
 # History Management (per session)
 store = {}
@@ -77,14 +84,6 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
     if session_id not in store:
         store[session_id] = ChatMessageHistory()
     return store[session_id]
-
-# Wrap Chain with History
-conversation_chain = RunnableWithMessageHistory(
-    chain,
-    get_session_history,
-    input_messages_key="question",
-    history_messages_key="chat_history",
-)
 
 # Pydantic Models
 class ChatMessage(BaseModel):
@@ -125,17 +124,55 @@ def transcribe_audio(audio_path: str, language: Optional[str] = None) -> str:
 def generate_response(message: str, session_id: str) -> str:
     """Generate response for a message"""
     try:
-        # Retrieve context
+        # 1. Detect Language First
+        is_ar = is_arabic(message)
+        lang_code = "ar" if is_ar else "en"
+        
+        # 2. Get Language-Specific Retriever
+        print(f"DEBUG: invoking retriever with '{message}' (Language: {lang_code})")
+        retriever = get_retriever(vector_store, lang_code)
         bootcamps = retriever.invoke(message)
+        print(f"DEBUG: retrieved {len(bootcamps)} docs")
+        
+        # Format docs to string
+        context_str = "\n\n".join([doc.page_content for doc in bootcamps])
+        
+        # 3. Select System Prompt
+        if is_ar:
+            print("DEBUG: Detected Arabic language")
+            system_template = SYSTEM_PROMPT_AR
+        else:
+            print("DEBUG: Detected English language")
+            system_template = SYSTEM_PROMPT_EN
+            
+        # Create Dynamic Prompt
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_template),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("human", "{question}"),
+        ])
+        
+        # Create Dynamic Chain
+        chain = prompt | model
+        
+        conversation_chain = RunnableWithMessageHistory(
+            chain,
+            get_session_history,
+            input_messages_key="question",
+            history_messages_key="chat_history",
+        )
         
         # Generate answer with history
+        print("DEBUG: invoking chain")
         result = conversation_chain.invoke(
-            {"bootcamps": bootcamps, "question": message},
+            {"bootcamps": context_str, "question": message},
             config={"configurable": {"session_id": session_id}}
         )
+        print("DEBUG: chain invoked successfully")
         
         return result.content
     except Exception as e:
+        print(f"❌ Error in generate_response: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}")
 
 # API Endpoints
@@ -230,7 +267,7 @@ async def health_check():
     return {
         "status": "healthy",
         "model": "llama3.2",
-        "embedding_model": "paraphrase-multilingual-MiniLM-L12-v2"
+        "embedding_model": "bge-m3 (Ollama)"
     }
 
 # Mount static files
@@ -240,14 +277,14 @@ app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 if __name__ == "__main__":
     print("🚀 Starting Twuaiq RAG Assistant FastAPI Server...")
-    print("🌐 The interface will be available at: http://localhost:8000")
-    print("📱 API documentation at: http://localhost:8000/docs")
+    print("🌐 The interface will be available at: http://localhost:8090")
+    print("📱 API documentation at: http://localhost:8090/docs")
     print("\n⏹️  Press Ctrl+C to stop the server")
     print("=" * 60)
     
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8000,
+        port=8090,
         log_level="info"
     )

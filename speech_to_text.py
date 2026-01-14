@@ -17,7 +17,7 @@ class SpeechToText:
 
     def __init__(
         self,
-        whisper_model: str = "small",
+        whisper_model: str = "dimavz/whisper-tiny",
         device: Literal["cpu", "cuda", "auto"] = "cpu",
         compute_type: str = "int8",
         sample_rate: int = 16000,
