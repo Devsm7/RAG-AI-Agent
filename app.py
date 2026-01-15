@@ -45,7 +45,8 @@ app.add_middleware(
 )
 
 # Initialize Chat Model
-model = ChatOllama(model='llama3.2')
+model_ar = ChatOllama(model='llama3.2')
+model_en = ChatOllama(model='llama3.2')
 
 # System Prompts
 SYSTEM_PROMPT_EN = """You are a helpful assistant for Twuaiq Academy.
