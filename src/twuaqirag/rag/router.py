@@ -108,4 +108,45 @@ def route_message(user_msg:str , state: ConversationState) -> RouteDecision:
 
     
 
-        
+
+    # # 3) REVIEW detection
+    # review_keywords_ar = [
+    #     "رأيي",
+    #     "تقييمي",
+    #     "التقييم",
+    #     "تجربتي",
+    #     "سيئ",
+    #     "ممتاز",
+    #     "جيد",
+    #     "مشكلة",
+    #     "وسخ",
+    #     "خربان",
+    # ]
+
+    # review_keywords_en = [
+    #     "review",
+    #     "feedback",
+    #     "my opinion",
+    #     "my experience",
+    #     "bad",
+    #     "good",
+    #     "terrible",
+    #     "great",
+    #     "dirty",
+    #     "broken",
+    #     "not working",
+    #     "problem",
+    #     "issue",
+    # ]
+
+
+    # if any(k in msg for k in review_keywords_ar) or any(k in msg_low for k in review_keywords_en):
+    #     return RouteDecision(
+    #         lang=lang,
+    #         response_lang=response_lang,
+    #         intent=Intent.REVIEW,
+    #     )
+
+
+
+    

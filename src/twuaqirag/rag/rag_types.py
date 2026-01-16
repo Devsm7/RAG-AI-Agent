@@ -17,6 +17,11 @@ class ResponseLang(str, Enum):
     ARABIC = "ar"
 
 
+class ReviewSentiment(str, Enum):
+    POSITIVE = "positive"
+    NEUTRAL = "neutral"
+    NEGATIVE = "negative"
+
 class Intent(str, Enum):
     """User intent types"""
     # Core RAG actions
@@ -24,8 +29,9 @@ class Intent(str, Enum):
     BOOTCAMP_QUERY = "bootcamp_query"    # معلومات عن معسكر
     FACILITY_QUERY = "facility_query"    # دورة مياه، كافيه...
     DIRECTIONS = "directions"             # من X إلى Y
-
+    REVIEW = "review"
     # Conversation control
     CLARIFY = "clarify"                   # معلومات ناقصة (وينه؟)
     TIME_QUERY = "time_query"             # وقت / دوام
-    GENERAL_QUERY = "general_query"       # خارج النطاق
+    GENERAL_QUERY = "general_query"   
+        # خارج النطاق

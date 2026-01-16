@@ -73,3 +73,41 @@ async def generate_response(user_message: str, session_id: str = "default") -> s
     store[session_id] = state
     
     return response
+
+    # # ✅ REVIEW handling (EARLY EXIT)
+    # if decision.intent == Intent.REVIEW:
+    #  review_agent = user_review_agent()
+    #  sentiment = review_agent.evaluate(user_message)
+
+    #  review_service.store_review(
+    #     text=user_message,
+    #     sentiment=sentiment,
+    #     place_id=state.last_place_id or "unknown",
+    #     session_id=session_id,
+    # )
+
+    #  store[session_id] = state
+
+    #  return (
+    #     "شكراً لمشاركتك رأيك. تم تسجيل الملاحظة."
+    #     if decision.response_lang.value == "ar"
+    #     else "Thank you for your feedback. Your review has been recorded."
+    # )
+    # Update state with detected language
+    
+
+
+
+    
+    #  state.pending_intent = decision.intent
+    #  state.pending_query = decision.place_query or user_message
+    #  store[session_id] = state
+    #  return decision.clarification_question or "Could you please clarify?"
+
+    # # ✅ Resume pending query after clarification
+    # if not decision.place_query and hasattr(state, "pending_query"):
+    #  decision.place_query = state.pending_query
+    #  decision.intent = state.pending_intent
+
+    
+   

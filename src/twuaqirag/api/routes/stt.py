@@ -6,7 +6,8 @@ from typing import Optional
 import tempfile
 import os
 
-from twuaqirag.services.speech_to_text import stt
+from twuaqirag.services.speech_to_text import get_stt_service, SpeechToTextService
+
 from twuaqirag.rag.orchestrator import generate_response
 
 router = APIRouter()
@@ -29,7 +30,7 @@ async def voice_chat(
             temp_audio_path = temp_audio.name
 
         # Transcribe audio
-        transcription = stt.transcribe_audio(temp_audio_path)
+        transcription = SpeechToTextService.transcribe_audio(temp_audio_path)
 
         # Clean up temp file
         try:

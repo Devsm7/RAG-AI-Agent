@@ -26,7 +26,7 @@ class RetrieverConfig:
 class RAGRetriever:
     def __init__(self, store: Chroma, config: Optional[RetrieverConfig] = None):
         self.store = store
-        self.config = config or RetrievalConfig()
+        self.config = config or RetrieverConfig()
 
     def _is_weak(self, docs: list[Document]) -> bool:
         if len(docs) < self.config.min_docs:
