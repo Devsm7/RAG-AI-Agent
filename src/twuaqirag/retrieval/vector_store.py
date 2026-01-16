@@ -20,7 +20,7 @@ vector_store = Chroma(
 def get_retriever(
     store: Chroma,
     lang: Optional[LangCode] = None,
-    k: int = 6
+    k: int = 20  # Increased to retrieve more documents
 ):
    search_kwargs= {'k': k}
    if lang:

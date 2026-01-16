@@ -1,187 +1,400 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Twuaiq Academy AI Assistant - Ask questions about bootcamps, locations, and schedules in English or Arabic">
-    <title>🎓 Twuaiq Academy Assistant | مساعد أكاديمية طويق</title>
-    <link rel="stylesheet" href="/static/styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Indoor Navigation Assistant Chatbot</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .header-text h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .header-text p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f9fafb;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .message.bot .message-avatar {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .message.user .message-avatar {
+            background: #6b7280;
+            color: white;
+        }
+
+        .message-content {
+            max-width: 70%;
+        }
+
+        .message.user .message-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message.bot .message-bubble {
+            background: white;
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Markdown Styles within Bubbles */
+        .message.bot .message-bubble p {
+            margin-bottom: 8px;
+        }
+
+        .message.bot .message-bubble p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message.bot .message-bubble ul,
+        .message.bot .message-bubble ol {
+            margin-left: 20px;
+            margin-bottom: 8px;
+        }
+
+        .message.bot .message-bubble code {
+            background: #f3f4f6;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .message.bot .message-bubble pre {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 8px;
+        }
+
+        .message.bot .message-bubble h1,
+        .message.bot .message-bubble h2,
+        .message.bot .message-bubble h3 {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            margin-top: 8px;
+        }
+
+        .message.user .message-bubble {
+            background: #3b82f6;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .typing-bubble {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border-bottom-left-radius: 4px;
+            display: flex;
+            gap: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .chat-input-container {
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        #messageInput {
+            width: 100%;
+            padding: 12px 48px 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        #messageInput:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        #messageInput:disabled {
+            background: #f3f4f6;
+            cursor: not-allowed;
+        }
+
+        .mic-button {
+            position: absolute;
+            right: 4px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .mic-button:hover {
+            background: #f3f4f6;
+        }
+
+        .mic-button.listening {
+            background: #ef4444;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+            }
+        }
+
+        .send-button {
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background: #2563eb;
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <!-- Header -->
-    <header class="header-container">
-        <div class="header-content">
-            <h1 class="header-title">🎓 Twuaiq Academy Assistant</h1>
-            <p class="header-subtitle">مساعد أكاديمية طويق الذكي</p>
-        </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="main-container">
-        <!-- Info Box -->
-        <div class="info-box">
-            <div class="info-content">
-                <strong>💡 How to use:</strong> Ask questions in English or Arabic about bootcamps, locations, and schedules. 
-                Use the text tab to type or the voice tab to speak!
-                <br><br>
-                <strong>كيفية الاستخدام:</strong> اطرح أسئلة بالإنجليزية أو العربية حول المعسكرات والمواقع والجداول. 
-                استخدم تبويب النص للكتابة أو تبويب الصوت للتحدث!
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="header-icon">📍</div>
+            <div class="header-text">
+                <h1>Indoor Navigation Assistant</h1>
+                <p>Ask me for directions anywhere in the building</p>
             </div>
         </div>
 
-        <!-- Tabs -->
-        <div class="tabs-container">
-            <div class="tab-nav">
-                <button class="tab-button active" data-tab="text">
-                    💬 Text Chat | الدردشة النصية
-                </button>
-                <button class="tab-button" data-tab="voice">
-                    🎤 Voice Chat | الدردشة الصوتية
-                </button>
-            </div>
-
-            <!-- Text Chat Tab -->
-            <div class="tab-content active" id="text-tab">
-                <div class="chat-container">
-                    <div class="chatbox" id="text-chatbox">
-                        <div class="welcome-message">
-                            <div class="bot-avatar">🤖</div>
-                            <div class="message-content">
-                                <p><strong>Welcome! مرحباً!</strong></p>
-                                <p>I'm here to help you with information about Twuaiq Academy bootcamps, locations, and schedules.</p>
-                                <p>أنا هنا لمساعدتك بمعلومات حول معسكرات أكاديمية طويق والمواقع والجداول.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="input-container">
-                        <textarea 
-                            id="text-input" 
-                            class="message-input" 
-                            placeholder="Type your question here... | اكتب سؤالك هنا..."
-                            rows="2"
-                        ></textarea>
-                        <div class="button-row">
-                            <button id="text-send-btn" class="btn btn-primary">
-                                Send | إرسال
-                            </button>
-                            <button id="text-clear-btn" class="btn btn-secondary">
-                                Clear | مسح
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Example Questions -->
-                    <div class="examples-section">
-                        <h3 class="examples-title">📝 Example Questions | أمثلة على الأسئلة</h3>
-                        <div class="examples-grid">
-                            <div class="example-column">
-                                <h4>English Examples</h4>
-                                <button class="example-card" data-question="What bootcamps are available?">
-                                    What bootcamps are available?
-                                </button>
-                                <button class="example-card" data-question="Where is the cafeteria?">
-                                    Where is the cafeteria?
-                                </button>
-                                <button class="example-card" data-question="What time does the Unity bootcamp start?">
-                                    What time does the Unity bootcamp start?
-                                </button>
-                                <button class="example-card" data-question="Tell me about the Cyber Security bootcamp">
-                                    Tell me about the Cyber Security bootcamp
-                                </button>
-                            </div>
-                            <div class="example-column">
-                                <h4>أمثلة بالعربية</h4>
-                                <button class="example-card" data-question="ما هي المعسكرات المتاحة؟">
-                                    ما هي المعسكرات المتاحة؟
-                                </button>
-                                <button class="example-card" data-question="أين تقع الكافتيريا؟">
-                                    أين تقع الكافتيريا؟
-                                </button>
-                                <button class="example-card" data-question="متى يبدأ معسكر يونيتي؟">
-                                    متى يبدأ معسكر يونيتي؟
-                                </button>
-                                <button class="example-card" data-question="أخبرني عن معسكر الأمن السيبراني">
-                                    أخبرني عن معسكر الأمن السيبراني
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Voice Chat Tab -->
-            <div class="tab-content" id="voice-tab">
-                <div class="chat-container">
-                    <div class="chatbox" id="voice-chatbox">
-                        <div class="welcome-message">
-                            <div class="bot-avatar">🤖</div>
-                            <div class="message-content">
-                                <p><strong>Voice Chat Ready! الدردشة الصوتية جاهزة!</strong></p>
-                                <p>Click the microphone button below to record your question.</p>
-                                <p>انقر على زر الميكروفون أدناه لتسجيل سؤالك.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="input-container">
-                        <div class="voice-controls">
-                            <button id="record-btn" class="btn btn-record">
-                                <span class="record-icon">🎤</span>
-                                <span class="record-text">Click to Record | انقر للتسجيل</span>
-                            </button>
-                            <div id="recording-status" class="recording-status hidden">
-                                <span class="pulse-dot"></span>
-                                Recording... | جاري التسجيل...
-                            </div>
-                        </div>
-                        <div class="button-row">
-                            <button id="voice-send-btn" class="btn btn-primary" disabled>
-                                Send Voice | إرسال الصوت
-                            </button>
-                            <button id="voice-clear-btn" class="btn btn-secondary">
-                                Clear | مسح
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Voice Instructions -->
-                    <div class="info-box voice-instructions">
-                        <strong>🎤 Voice Instructions:</strong>
-                        <ol>
-                            <li>Click the microphone icon to start recording</li>
-                            <li>Speak your question in English or Arabic</li>
-                            <li>Click stop when finished</li>
-                            <li>Click "Send Voice" to get your answer</li>
-                        </ol>
-                        <strong>تعليمات الصوت:</strong>
-                        <ol>
-                            <li>انقر على أيقونة الميكروفون لبدء التسجيل</li>
-                            <li>تحدث بسؤالك بالإنجليزية أو العربية</li>
-                            <li>انقر على إيقاف عند الانتهاء</li>
-                            <li>انقر على "إرسال الصوت" للحصول على إجابتك</li>
-                        </ol>
+        <!-- Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <div class="message-bubble">
+                        Hello! I'm your indoor navigation assistant. How can I help you find your way today?
                     </div>
                 </div>
             </div>
         </div>
-    </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <p>🎓 Powered by Twuaiq Academy | مدعوم من أكاديمية طويق</p>
-        <p class="footer-tech">Built with FastAPI, LangChain, and Ollama</p>
-    </footer>
-
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay hidden">
-        <div class="loading-spinner"></div>
-        <p class="loading-text">Processing... | جاري المعالجة...</p>
+        <!-- Input Area -->
+        <div class="chat-input-container">
+            <div class="input-wrapper">
+                <input type="text" id="messageInput" placeholder="Ask for directions or type a location..."
+                    autocomplete="off">
+                <button id="micButton" class="mic-button" title="Voice input">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                </button>
+            </div>
+            <button id="sendButton" class="send-button">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
     </div>
-
     <script src="/static/app.js"></script>
 </body>
+
 </html>

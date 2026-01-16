@@ -17,14 +17,14 @@ LangCode = Literal['ar' , 'en']
 
 @dataclass
 class RetrieverConfig:
-    k_primery: int = 6
-    k_fallback: int = 6
-    min_docs: int =2
-    max_chars: int = 6000
+    k_primary: int = 20  # Increased to retrieve more documents
+    k_fallback: int = 20  # Increased to retrieve more documents
+    min_docs: int = 2
+    max_chars: int = 12000  # Increased to accommodate more documents
 
 
 class RAGRetriever:
-    def __init__(self, store: Chroma, config: Optional[RetrievalConfig] = None):
+    def __init__(self, store: Chroma, config: Optional[RetrieverConfig] = None):
         self.store = store
         self.config = config or RetrievalConfig()
 

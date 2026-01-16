@@ -1,350 +1,207 @@
 // ===== Global State =====
-let currentTab = 'text';
-let textSessionId = 'text_session_' + Date.now();
-let voiceSessionId = 'voice_session_' + Date.now();
+let sessionId = 'session_' + Date.now();
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
 
 // ===== DOM Elements =====
-const tabButtons = document.querySelectorAll('.tab-button');
-const tabContents = document.querySelectorAll('.tab-content');
+const chatMessages = document.getElementById('chatMessages');
+const messageInput = document.getElementById('messageInput');
+const micButton = document.getElementById('micButton');
+const sendButton = document.getElementById('sendButton');
 
-// Text Chat Elements
-const textInput = document.getElementById('text-input');
-const textSendBtn = document.getElementById('text-send-btn');
-const textClearBtn = document.getElementById('text-clear-btn');
-const textChatbox = document.getElementById('text-chatbox');
-
-// Voice Chat Elements
-const recordBtn = document.getElementById('record-btn');
-const voiceSendBtn = document.getElementById('voice-send-btn');
-const voiceClearBtn = document.getElementById('voice-clear-btn');
-const voiceChatbox = document.getElementById('voice-chatbox');
-const recordingStatus = document.getElementById('recording-status');
-
-// Loading Overlay
-const loadingOverlay = document.getElementById('loading-overlay');
-
-// Example Cards
-const exampleCards = document.querySelectorAll('.example-card');
-
-// ===== Tab Switching =====
-tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        const tabName = button.dataset.tab;
-        switchTab(tabName);
-    });
-});
-
-function switchTab(tabName) {
-    currentTab = tabName;
-
-    // Update buttons
-    tabButtons.forEach(btn => {
-        if (btn.dataset.tab === tabName) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-
-    // Update content
-    tabContents.forEach(content => {
-        if (content.id === `${tabName}-tab`) {
-            content.classList.add('active');
-        } else {
-            content.classList.remove('active');
-        }
-    });
-}
-
-// ===== Text Chat Functions =====
-textSendBtn.addEventListener('click', sendTextMessage);
-textInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendTextMessage();
+// ===== Event Listeners =====
+sendButton.addEventListener('click', handleSendMessage);
+messageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        handleSendMessage();
     }
 });
+micButton.addEventListener('click', toggleRecording);
 
-async function sendTextMessage() {
-    const message = textInput.value.trim();
+// ===== Functions =====
 
-    if (!message) {
-        return;
-    }
+async function handleSendMessage() {
+    const text = messageInput.value.trim();
+    if (!text) return;
 
-    // Add user message to chat
-    addMessage(textChatbox, message, 'user');
+    // 1. Add User Message
+    addMessage(text, 'user');
+    messageInput.value = '';
 
-    // Clear input
-    textInput.value = '';
-
-    // Show loading
-    showLoading();
+    // 2. Show Typing Indicator
+    const typingId = showTypingIndicator();
 
     try {
+        // 3. Send to Backend
         const response = await fetch('/api/chat', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                message: message,
-                session_id: textSessionId
+                message: text,
+                session_id: sessionId
             })
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to get response');
-        }
-
+        if (!response.ok) throw new Error('API Error');
         const data = await response.json();
 
-        // Add bot response to chat
-        addMessage(textChatbox, data.response, 'bot');
+        // 4. Remove Typing Indicator & Add Bot Message
+        removeTypingIndicator(typingId);
+        addMessage(data.response, 'bot');
 
     } catch (error) {
-        console.error('Error:', error);
-        addMessage(textChatbox, 'Sorry, there was an error processing your request. | عذراً، حدث خطأ في معالجة طلبك.', 'bot', true);
-    } finally {
-        hideLoading();
+        console.error(error);
+        removeTypingIndicator(typingId);
+        addMessage('Sorry, something went wrong. | عذراً، حدث خطأ.', 'bot');
     }
 }
-
-textClearBtn.addEventListener('click', async () => {
-    if (confirm('Are you sure you want to clear the conversation? | هل أنت متأكد من مسح المحادثة؟')) {
-        try {
-            await fetch('/api/clear-history', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    session_id: textSessionId
-                })
-            });
-
-            // Clear chatbox
-            textChatbox.innerHTML = `
-                <div class="welcome-message">
-                    <div class="bot-avatar">🤖</div>
-                    <div class="message-content">
-                        <p><strong>Welcome! مرحباً!</strong></p>
-                        <p>I'm here to help you with information about Twuaiq Academy bootcamps, locations, and schedules.</p>
-                        <p>أنا هنا لمساعدتك بمعلومات حول معسكرات أكاديمية طويق والمواقع والجداول.</p>
-                    </div>
-                </div>
-            `;
-
-            // Generate new session ID
-            textSessionId = 'text_session_' + Date.now();
-
-        } catch (error) {
-            console.error('Error clearing history:', error);
-        }
-    }
-});
-
-// ===== Voice Chat Functions =====
-recordBtn.addEventListener('click', toggleRecording);
-voiceSendBtn.addEventListener('click', sendVoiceMessage);
-voiceClearBtn.addEventListener('click', async () => {
-    if (confirm('Are you sure you want to clear the conversation? | هل أنت متأكد من مسح المحادثة؟')) {
-        try {
-            await fetch('/api/clear-history', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    session_id: voiceSessionId
-                })
-            });
-
-            // Clear chatbox
-            voiceChatbox.innerHTML = `
-                <div class="welcome-message">
-                    <div class="bot-avatar">🤖</div>
-                    <div class="message-content">
-                        <p><strong>Voice Chat Ready! الدردشة الصوتية جاهزة!</strong></p>
-                        <p>Click the microphone button below to record your question.</p>
-                        <p>انقر على زر الميكروفون أدناه لتسجيل سؤالك.</p>
-                    </div>
-                </div>
-            `;
-
-            // Generate new session ID
-            voiceSessionId = 'voice_session_' + Date.now();
-
-            // Reset recording state
-            audioChunks = [];
-            voiceSendBtn.disabled = true;
-
-        } catch (error) {
-            console.error('Error clearing history:', error);
-        }
-    }
-});
 
 async function toggleRecording() {
     if (!isRecording) {
-        await startRecording();
+        // Start Recording
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                // Send Audio when recording stops
+                await sendVoiceMessage();
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            micButton.classList.add('listening');
+
+        } catch (err) {
+            console.error('Mic Error:', err);
+            alert('Cannot access microphone.');
+        }
     } else {
-        stopRecording();
-    }
-}
-
-async function startRecording() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-
-        mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data);
-        };
-
-        mediaRecorder.onstop = () => {
-            // Enable send button
-            voiceSendBtn.disabled = false;
-        };
-
-        mediaRecorder.start();
-        isRecording = true;
-
-        // Update UI
-        recordBtn.classList.add('recording');
-        recordBtn.querySelector('.record-text').textContent = 'Stop Recording | إيقاف التسجيل';
-        recordingStatus.classList.remove('hidden');
-
-    } catch (error) {
-        console.error('Error accessing microphone:', error);
-        alert('Could not access microphone. Please check your permissions. | لا يمكن الوصول إلى الميكروفون. يرجى التحقق من الأذونات.');
-    }
-}
-
-function stopRecording() {
-    if (mediaRecorder && isRecording) {
-        mediaRecorder.stop();
-        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        // Stop Recording
+        if (mediaRecorder) {
+            mediaRecorder.stop();
+            // Stop all tracks to release mic
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        }
         isRecording = false;
-
-        // Update UI
-        recordBtn.classList.remove('recording');
-        recordBtn.querySelector('.record-text').textContent = 'Click to Record | انقر للتسجيل';
-        recordingStatus.classList.add('hidden');
+        micButton.classList.remove('listening');
     }
 }
 
 async function sendVoiceMessage() {
-    if (audioChunks.length === 0) {
-        return;
-    }
+    if (audioChunks.length === 0) return;
 
-    showLoading();
+    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'recording.wav');
+    formData.append('session_id', sessionId);
+
+    // Show typing indicator while processing voice
+    const typingId = showTypingIndicator();
 
     try {
-        // Create audio blob
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-
-        // Create form data
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.wav');
-        formData.append('session_id', voiceSessionId);
-
         const response = await fetch('/api/voice-chat', {
             method: 'POST',
             body: formData
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to process voice message');
-        }
-
+        if (!response.ok) throw new Error('Voice API Error');
         const data = await response.json();
 
-        if (data.error) {
-            addMessage(voiceChatbox, data.error, 'bot', true);
-        } else {
-            // Add transcription as user message
-            addMessage(voiceChatbox, `🎤 ${data.transcription}`, 'user');
+        removeTypingIndicator(typingId);
 
-            // Add bot response
-            addMessage(voiceChatbox, data.response, 'bot');
+        if (data.error) {
+            addMessage(data.error, 'bot');
+        } else {
+            // Show transcription if available
+            if (data.transcription) {
+                addMessage(`🎤 ${data.transcription}`, 'user');
+            }
+            addMessage(data.response, 'bot');
         }
 
-        // Reset
-        audioChunks = [];
-        voiceSendBtn.disabled = true;
-
     } catch (error) {
-        console.error('Error:', error);
-        addMessage(voiceChatbox, 'Sorry, there was an error processing your voice message. | عذراً، حدث خطأ في معالجة رسالتك الصوتية.', 'bot', true);
-    } finally {
-        hideLoading();
+        console.error(error);
+        removeTypingIndicator(typingId);
+        addMessage('Error processing voice message.', 'bot');
     }
 }
 
-// ===== Helper Functions =====
-function addMessage(chatbox, content, sender, isError = false) {
+function addMessage(content, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
 
     const avatar = document.createElement('div');
+    messageDiv.className = `message ${sender}`;
     avatar.className = 'message-avatar';
     avatar.textContent = sender === 'user' ? '👤' : '🤖';
 
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+
     const bubble = document.createElement('div');
     bubble.className = 'message-bubble';
-    bubble.textContent = content;
 
-    if (isError) {
-        bubble.style.borderLeftColor = 'var(--error-color)';
-        bubble.style.color = 'var(--error-color)';
+    // Render Markdown for bot, plain text for user
+    if (sender === 'bot') {
+        // Use marked.parse if available (since we added the script)
+        bubble.innerHTML = window.marked ? marked.parse(content) : content;
+    } else {
+        bubble.textContent = content;
     }
 
-    messageDiv.appendChild(avatar);
-    messageDiv.appendChild(bubble);
+    contentDiv.appendChild(bubble);
 
-    chatbox.appendChild(messageDiv);
+    if (sender === 'bot') {
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(contentDiv);
+    } else {
+        // User: Content first (flex-direction: row-reverse handles visual order, 
+        // but DOM order is avatar then content, css reverses it)
+        // Wait, CSS says: .message.user { flex-direction: row-reverse; }
+        // So DOM order: Avatar, Content. Visual: Content, Avatar.
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(contentDiv);
+    }
 
-    // Scroll to bottom
-    chatbox.scrollTop = chatbox.scrollHeight;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function showLoading() {
-    loadingOverlay.classList.remove('hidden');
+function showTypingIndicator() {
+    const id = 'typing-' + Date.now();
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'typing-indicator';
+    typingDiv.id = id;
+
+    typingDiv.innerHTML = `
+        <div class="message-avatar" style="background: #3b82f6; color: white;">🤖</div>
+        <div class="typing-bubble">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        </div>
+    `;
+
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return id;
 }
 
-function hideLoading() {
-    loadingOverlay.classList.add('hidden');
+function removeTypingIndicator(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
 }
 
-// ===== Example Questions =====
-exampleCards.forEach(card => {
-    card.addEventListener('click', () => {
-        const question = card.dataset.question;
-        textInput.value = question;
-        textInput.focus();
-
-        // Switch to text tab if not already there
-        if (currentTab !== 'text') {
-            switchTab('text');
-        }
-    });
-});
-
-// ===== Initialize =====
-console.log('🎓 Twuaiq Academy Assistant initialized');
-console.log('Text Session ID:', textSessionId);
-console.log('Voice Session ID:', voiceSessionId);
-
-// Check if browser supports media recording
-if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    console.warn('Voice recording not supported in this browser');
-    recordBtn.disabled = true;
-    recordBtn.querySelector('.record-text').textContent = 'Voice not supported | الصوت غير مدعوم';
+// Initial Greeting Timestamp
+const initialTime = document.getElementById('initialTime');
+if (initialTime) {
+    const now = new Date();
+    initialTime.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }

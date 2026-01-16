@@ -1,11 +1,11 @@
 from langchain_core.documents import Document
 
-def docs_to_context(docs: list[document] , max_chars: int = 6000) -> str:
+def docs_to_context(docs: list[Document], max_chars: int = 6000) -> str:
 
     parts = []
     total = 0
 
-    for i,doc in enumerate(docs , start=1):
+    for i, doc in enumerate(docs, start=1):
         meta = doc.metadata or {}
         
         meta_str = ",".join(
@@ -14,13 +14,13 @@ def docs_to_context(docs: list[document] , max_chars: int = 6000) -> str:
              if k in meta and meta[k] is not None
         )
 
-    chunk = doc.page_contnt.strip()
-    block = f"[Doc {i}: {meta_str}]\n\n{chunk}"
+        chunk = doc.page_content.strip()
+        block = f"[Doc {i}: {meta_str}]\n\n{chunk}"
 
-    if total + len(block) > max_chars:
-        break
+        if total + len(block) > max_chars:
+            break
     
-    parts.append(block)
-    total +=len(block)
+        parts.append(block)
+        total += len(block)
 
-return "\n\n".join(parts) if parts else ""
+    return "\n\n".join(parts) if parts else ""

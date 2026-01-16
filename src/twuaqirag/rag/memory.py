@@ -4,12 +4,14 @@ Memory management for conversation history
 """
 from pydantic import BaseModel
 from typing import Optional
-from .types import ResponseLang
+from .rag_types import ResponseLang
 
 class ConversationState(BaseModel):
-    last_lang: ResponseLang = "en"
+    last_lang: ResponseLang = ResponseLang.ENGLISH
 
     last_place_query: Optional[str] = None
+
+    last_facility_query: Optional[str] = None
 
     # للاتجاهات
     last_origin_query: Optional[str] = None
@@ -32,3 +34,6 @@ class InMemoryStateStore:
 
     def set(self, session_id: str, state: ConversationState):
         self._store[session_id] = state
+
+# Global store instance
+store: dict[str, ConversationState] = {}

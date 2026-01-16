@@ -18,7 +18,7 @@ class Config:
     
     # API settings
     API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
-    API_PORT: int = int(os.getenv("API_PORT", "8090"))
+    API_PORT: int = int(os.getenv("API_PORT", "8000"))
     
     # Model settings
     LLM_MODEL: str = os.getenv("LLM_MODEL", "llama3.2")
@@ -30,7 +30,7 @@ class Config:
     WHISPER_COMPUTE_TYPE: str = os.getenv("WHISPER_COMPUTE_TYPE", "int8")
     
     # Retrieval settings
-    RETRIEVAL_K: int = int(os.getenv("RETRIEVAL_K", "10"))
+    RETRIEVAL_K: int = int(os.getenv("RETRIEVAL_K", "20"))  # Increased to retrieve more documents
     
     # Database files
     BOOTCAMPS_CSV: Path = DATASETS_DIR / "bootcamps_db.csv"
