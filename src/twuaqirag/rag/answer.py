@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from langchain_ollama import ChatOllama
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
 from twuaqirag.rag.rag_types import ResponseLang
@@ -21,17 +21,16 @@ from twuaqirag.core.config import config
 # Initialize LLMs once (important for performance)
 _llm_english = ChatOllama(model=config.LLM_MODEL)  # For English responses
 
-# For Arabic responses - use Google's Gemini
+# For Arabic responses - use OpenAI (GPT-4o-mini) or Fallback
 _llm_arabic = None
-if config.GOOGLE_API_KEY:
-    _llm_arabic = ChatGoogleGenerativeAI(
-        model=config.GEMINI_MODEL,
-        google_api_key=config.GOOGLE_API_KEY,
+if config.OPENAI_API_KEY:
+    _llm_arabic = ChatOpenAI(
+        model=config.OPENAI_MODEL,
+        openai_api_key=config.OPENAI_API_KEY,
         temperature=0.7,
-        convert_system_message_to_human=True  # Gemini doesn't support system messages natively
     )
 else:
-    # Fallback to Ollama if no Google API key is provided
+    # Fallback to Ollama if no OpenAI API key is provided
     _llm_arabic = ChatOllama(model=config.LLM_MODEL)
 
 

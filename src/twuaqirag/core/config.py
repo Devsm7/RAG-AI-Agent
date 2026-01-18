@@ -19,16 +19,16 @@ class Config:
     
     # API settings
     API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
-    API_PORT: int = int(os.getenv("API_PORT", "8000"))
+    API_PORT: int = int(os.getenv("API_PORT", "8080"))
     
     # Model settings
     LLM_MODEL: str = os.getenv("LLM_MODEL", "llama3.2")
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "mxbai-embed-large")
     WHISPER_MODEL: str = os.getenv("WHISPER_MODEL", "medium")
     
-    # Google Generative AI settings (for Arabic responses)
-    GOOGLE_API_KEY: Optional[str] = os.getenv("GOOGLE_API_KEY")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    # OpenAI settings (for Arabic responses)
+    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
+    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     
     # Whisper settings
     WHISPER_DEVICE: str = os.getenv("WHISPER_DEVICE", "cpu")
