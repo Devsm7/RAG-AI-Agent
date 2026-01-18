@@ -48,6 +48,50 @@ def route_message(user_msg:str , state: ConversationState) -> RouteDecision:
 
     msg = user_msg.strip()
     msg_low = msg.lower()
+    # --- REVIEW SUBMIT keywords ---
+    review_submit_en = [
+    "bad", "terrible", "awful", "dirty", "smell", "hate",
+    "great", "good", "amazing", "love", "excellent",
+    "my experience", "my opinion", "feedback"
+     ]
+    review_submit_ar = [
+    "سيئ", "وسخ", "ريحة", "كرهت", "تجربتي", "رأيي",
+    "ممتاز", "جيد", "سيئة", "خدمة"
+    ]
+
+# --- REVIEW QUERY keywords ---
+    review_query_en = [
+    "reviews", "ratings", "what do people think",
+    "any reviews", "opinions about", "feedback about"
+]
+
+    review_query_ar = [
+    "آراء", "تقييمات", "وش رأي", "هل في تقييم",
+    "آراء الناس"
+]
+
+# -----------------------------
+# REVIEW QUERY (must come FIRST)
+# -----------------------------
+    if any(k in msg_low for k in review_query_en) or any(k in msg for k in review_query_ar):
+     return RouteDecision(
+        lang=lang,
+        response_lang=response_lang,
+        intent=Intent.REVIEW_QUERY,
+        place_query=state.last_place_query,
+    )
+
+# -----------------------------
+# REVIEW SUBMIT
+# -----------------------------
+    if any(k in msg_low for k in review_submit_en) or any(k in msg for k in review_submit_ar):
+     return RouteDecision(
+        lang=lang,
+        response_lang=response_lang,
+        intent=Intent.REVIEW_SUBMIT,
+    )
+
+ 
     # 1) Pronoun / short messages: "وينه؟" "where is it?"
     short_forms_ar = {"وينه", "وينه؟", "وين", "وين؟", "هنا؟", "هناك؟"}
     short_forms_en = {"where is it", "where is it?", "where?", "here?", "there?"}
@@ -72,6 +116,10 @@ def route_message(user_msg:str , state: ConversationState) -> RouteDecision:
                     else "Which place/classroom do you mean? Please provide the name or room number."
                 ),
     )
+      
+
+
+
 
     # 2) Directions: "من X إلى Y" "from X to Y"
     direction_forms_ar = {"من", "إلى", "من", "إلى"}
@@ -104,49 +152,10 @@ def route_message(user_msg:str , state: ConversationState) -> RouteDecision:
         response_lang=response_lang,
         intent=Intent.PLACE_QUERY,
         place_query=msg,
-    )
+     )
 
+  
     
 
 
-    # # 3) REVIEW detection
-    # review_keywords_ar = [
-    #     "رأيي",
-    #     "تقييمي",
-    #     "التقييم",
-    #     "تجربتي",
-    #     "سيئ",
-    #     "ممتاز",
-    #     "جيد",
-    #     "مشكلة",
-    #     "وسخ",
-    #     "خربان",
-    # ]
-
-    # review_keywords_en = [
-    #     "review",
-    #     "feedback",
-    #     "my opinion",
-    #     "my experience",
-    #     "bad",
-    #     "good",
-    #     "terrible",
-    #     "great",
-    #     "dirty",
-    #     "broken",
-    #     "not working",
-    #     "problem",
-    #     "issue",
-    # ]
-
-
-    # if any(k in msg for k in review_keywords_ar) or any(k in msg_low for k in review_keywords_en):
-    #     return RouteDecision(
-    #         lang=lang,
-    #         response_lang=response_lang,
-    #         intent=Intent.REVIEW,
-    #     )
-
-
-
-    
+   

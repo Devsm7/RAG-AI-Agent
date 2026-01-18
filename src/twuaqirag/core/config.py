@@ -4,7 +4,8 @@ Environment variables and configuration
 import os
 from pathlib import Path
 from typing import Optional
-
+from dotenv import load_dotenv
+load_dotenv()  
 
 class Config:
     """Application configuration"""
@@ -35,7 +36,7 @@ class Config:
     # Database files
     BOOTCAMPS_CSV: Path = DATASETS_DIR / "bootcamps_new_db.csv"
     PLACES_CSV: Path = DATASETS_DIR / "places_new_db.csv"
-    REVIEWS_CSV: Path = DATASETS_DIR / "realistic_restaurant_reviews.csv"
+    REVIEWS_CSV: Path = DATASETS_DIR / "reviews.csv"
 
 
 config = Config()

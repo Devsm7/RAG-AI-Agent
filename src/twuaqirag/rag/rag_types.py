@@ -29,7 +29,9 @@ class Intent(str, Enum):
     BOOTCAMP_QUERY = "bootcamp_query"    # معلومات عن معسكر
     FACILITY_QUERY = "facility_query"    # دورة مياه، كافيه...
     DIRECTIONS = "directions"             # من X إلى Y
-    REVIEW = "review"
+
+    REVIEW_SUBMIT = "review_submit"
+    REVIEW_QUERY = "review_query"
     # Conversation control
     CLARIFY = "clarify"                   # معلومات ناقصة (وينه؟)
     TIME_QUERY = "time_query"             # وقت / دوام
