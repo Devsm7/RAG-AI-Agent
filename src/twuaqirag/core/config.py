@@ -21,7 +21,9 @@ class Config:
     API_PORT: int = int(os.getenv("API_PORT", "8000"))
     
     # Model settings
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "llama3.2")
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "llama3.2")  # Deprecated: use LLM_MODEL_ENGLISH/ARABIC
+    LLM_MODEL_ENGLISH: str = os.getenv("LLM_MODEL_ENGLISH", "llama3.2")
+    LLM_MODEL_ARABIC: str = os.getenv("LLM_MODEL_ARABIC", "aya")
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "mxbai-embed-large")
     WHISPER_MODEL: str = os.getenv("WHISPER_MODEL", "medium")
     
@@ -33,9 +35,8 @@ class Config:
     RETRIEVAL_K: int = int(os.getenv("RETRIEVAL_K", "20"))  # Increased to retrieve more documents
     
     # Database files
-    BOOTCAMPS_CSV: Path = DATASETS_DIR / "bootcamps_db.csv"
-    PLACES_CSV: Path = DATASETS_DIR / "places_db.csv"
-    REVIEWS_CSV: Path = DATASETS_DIR / "realistic_restaurant_reviews.csv"
+    BOOTCAMPS_CSV: Path = DATASETS_DIR / "bootcamps_new.csv"
+    PLACES_CSV: Path = DATASETS_DIR / "places_new.csv"
 
 
 config = Config()

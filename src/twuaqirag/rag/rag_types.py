@@ -24,8 +24,11 @@ class Intent(str, Enum):
     BOOTCAMP_QUERY = "bootcamp_query"    # معلومات عن معسكر
     FACILITY_QUERY = "facility_query"    # دورة مياه، كافيه...
     DIRECTIONS = "directions"             # من X إلى Y
+    FOLLOW_UP = "follow_up"                # وينه؟ هناك؟ كم؟
 
     # Conversation control
     CLARIFY = "clarify"                   # معلومات ناقصة (وينه؟)
     TIME_QUERY = "time_query"             # وقت / دوام
     GENERAL_QUERY = "general_query"       # خارج النطاق
+
+    UNKNOWN = "unknown"                    # لم يتم تحديد النية

@@ -98,6 +98,7 @@ def load_bootcamps_from_csv(csv_path: Path, places_csv_path: Path) -> List[Docum
         for row in reader:
             places_map[row['id']] = {
                 'name': row['name'],
+                'name_ar': row.get('name_ar', row['name']),
                 'floor': row['floor'],
                 'corridor': row.get('corridor', '')
             }
@@ -118,6 +119,7 @@ def load_bootcamps_from_csv(csv_path: Path, places_csv_path: Path) -> List[Docum
             # Get place information
             place_info = places_map.get(place_id, {})
             place_name = place_info.get('name', 'Unknown')
+            place_name_ar = place_info.get('name_ar', place_name)
             floor = place_info.get('floor', 'Unknown')
             corridor = place_info.get('corridor', '')
             
@@ -164,13 +166,13 @@ Currently, there are {num_students} students enrolled in this program."""
             )
             documents.append(en_doc)
             
-            # Create Arabic document using CSV data
+            # Create Arabic document using CSV data and Arabic place name
             ar_content = f"""المعسكر: {name_ar}
 عدد الطلاب: {num_students}
 الجدول الزمني: من {start_12hr} إلى {end_12hr} (يومياً)
-الموقع: {place_name}، الطابق {floor}{f'، الممر {corridor}' if corridor and corridor != 'NULL' else ''}
+الموقع: {place_name_ar}، الطابق {floor}{f'، الممر {corridor}' if corridor and corridor != 'NULL' else ''}
 
-يُعقد معسكر {name_ar} في {place_name} في الطابق {floor}.
+يُعقد معسكر {name_ar} في {place_name_ar} في الطابق {floor}.
 تبدأ الحصص من {start_12hr} إلى {end_12hr} يومياً.
 حالياً، هناك {num_students} طالب مسجلين في هذا البرنامج."""
             
@@ -182,6 +184,7 @@ Currently, there are {num_students} students enrolled in this program."""
                     'name_ar': name_ar,
                     'place_id': place_id,
                     'place_name': place_name,
+                    'place_name_ar': place_name_ar,
                     'floor': floor,
                     'corridor': corridor if corridor != 'NULL' else '',
                     'start_time': start_time,

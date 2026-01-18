@@ -12,12 +12,27 @@ from typing import Optional
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 
+from twuaqirag.core.config import config
 from twuaqirag.rag.rag_types import ResponseLang
 from twuaqirag.rag.prompts import SYSTEM_PROMPT_EN, SYSTEM_PROMPT_AR
 
 
-# Initialize once (important for performance)
-_llm = ChatOllama(model="llama3.2")
+# Initialize language-specific LLM models (important for performance)
+_llm_english = ChatOllama(model=config.LLM_MODEL_ENGLISH)
+_llm_arabic = ChatOllama(model=config.LLM_MODEL_ARABIC)
+
+
+def _get_llm(response_lang: ResponseLang) -> ChatOllama:
+    """
+    Select the appropriate LLM model based on response language.
+    
+    Args:
+        response_lang: The target response language
+        
+    Returns:
+        ChatOllama instance for the specified language
+    """
+    return _llm_arabic if response_lang == ResponseLang.ARABIC else _llm_english
 
 
 @dataclass
@@ -43,10 +58,10 @@ def _build_prompt(response_lang: ResponseLang) -> ChatPromptTemplate:
                 "human",
                 "Retrieved Context:\n{context}\n\n"
                 "User Question:\n{question}\n\n"
-                "Instructions:\n"
-                "- Answer in the same language as the system message.\n"
-                "- Use only the retrieved context.\n"
-                "- If the context is insufficient, ask ONE clarifying question.\n",
+               # "Instructions:\n"
+                #"- Answer in the same language as the system message.\n"
+                #"- Use only the retrieved context.\n"
+                #"- If the context is insufficient, ask ONE clarifying question.\n",
             ),
         ]
     )
@@ -54,15 +69,16 @@ def _build_prompt(response_lang: ResponseLang) -> ChatPromptTemplate:
 
 async def generate_answer(inp: AnswerInput) -> str:
     """
-    Generate answer using LLM based on context & question.
+    Generate answer using language-specific LLM based on context & question.
     """
     prompt = _build_prompt(inp.response_lang)
+    llm = _get_llm(inp.response_lang)
 
     context = inp.context or ""
     if inp.style_hint:
         context = f"{context}\n\nStyle hint: {inp.style_hint}"
 
-    chain = prompt | _llm
+    chain = prompt | llm
     result = await chain.ainvoke(
         {
             "question": inp.question,
