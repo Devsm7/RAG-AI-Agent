@@ -26,6 +26,10 @@ class Config:
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "mxbai-embed-large")
     WHISPER_MODEL: str = os.getenv("WHISPER_MODEL", "medium")
     
+    # Google Generative AI settings (for Arabic responses)
+    GOOGLE_API_KEY: Optional[str] = os.getenv("GOOGLE_API_KEY")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    
     # Whisper settings
     WHISPER_DEVICE: str = os.getenv("WHISPER_DEVICE", "cpu")
     WHISPER_COMPUTE_TYPE: str = os.getenv("WHISPER_COMPUTE_TYPE", "int8")
@@ -34,8 +38,8 @@ class Config:
     RETRIEVAL_K: int = int(os.getenv("RETRIEVAL_K", "20"))  # Increased to retrieve more documents
     
     # Database files
-    BOOTCAMPS_CSV: Path = DATASETS_DIR / "bootcamps_new_db.csv"
-    PLACES_CSV: Path = DATASETS_DIR / "places_new_db.csv"
+    BOOTCAMPS_CSV: Path = DATASETS_DIR / "bootcamps_new.csv"
+    PLACES_CSV: Path = DATASETS_DIR / "places_new.csv"
     REVIEWS_CSV: Path = DATASETS_DIR / "reviews.csv"
 
 

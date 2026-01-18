@@ -4,16 +4,15 @@ from typing import Literal , Optional
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
 
+from twuaqirag.core.config import config
+
 LangCode = Literal['ar' , 'en']
 
-CHROMA_DIR = 'chroma_db'
-COLLECTION_NAME = 'twuiqiraq'
-
-_embeddings = OllamaEmbeddings(model='mxbai-embed-large')
+_embeddings = OllamaEmbeddings(model=config.EMBEDDING_MODEL)
 
 vector_store = Chroma(
-    collection_name=COLLECTION_NAME,
-    persist_directory=CHROMA_DIR,
+    collection_name='twuiqiraq',
+    persist_directory=str(config.CHROMA_DB_DIR),
     embedding_function=_embeddings,
     )
 

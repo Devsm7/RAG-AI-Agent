@@ -8,7 +8,7 @@ from typing import Optional, Tuple
 
 from twuaqirag.rag.router import route_message
 from twuaqirag.rag.memory import store, ConversationState
-from twuaqirag.rag.answer import generate_answer, AnswerInput
+from twuaqirag.rag.answer import generate_answer, AnswerInput, translate_to_english
 from twuaqirag.rag.rag_types import Intent, ResponseLang
 from twuaqirag.retrieval.vector_store import get_retriever, vector_store
 from twuaqirag.retrieval.formatting import docs_to_context
@@ -261,12 +261,29 @@ async def generate_response(user_message: str, session_id: str = "default") -> s
         Intent.BOOTCAMP_QUERY,
         Intent.DIRECTIONS,
     }:
+        retrieval_query = decision.place_query or user_message
+        retrieval_lang = decision.response_lang.value
+        
+        # Cross-Lingual Retrieval for Arabic
+        if decision.response_lang == ResponseLang.ARABIC:
+            try:
+                # Since embedding model struggles with Arabic, we translate query to English
+                # and search against English documents (which are semantically richer for this model)
+                logger.info(f"Translating Arabic query to English: {retrieval_query}")
+                translated_query = await translate_to_english(retrieval_query)
+                if translated_query:
+                    logger.info(f"Translated query: {translated_query}")
+                    retrieval_query = translated_query
+                    retrieval_lang = "en"  # Force search in English
+            except Exception as e:
+                logger.error(f"Translation failed, falling back to Arabic retrieval: {e}")
+
         retriever = get_retriever(
             vector_store,
-            lang=decision.response_lang.value,
+            lang=retrieval_lang,
         )
 
-        docs = retriever.invoke(decision.place_query or user_message)
+        docs = retriever.invoke(retrieval_query)
 
         # Convert docs → context
         context = docs_to_context(docs)

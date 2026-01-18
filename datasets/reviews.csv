@@ -1,3 +1,8 @@
 text,sentiment,place_id,session_id,created_at
 
 dunkin is terrible,negative,5,session_1768738588469,2026-01-18T12:16:39.417678
+the walls in floor 1 are dirty please send a review,negative,unknown,session_1768746939069,2026-01-18T14:36:06.373254
+the walls are dirty in floor 1 please send review,negative,unknown,session_1768747436666,2026-01-18T14:44:17.411758
+my experience in twuaiq is good,positive,unknown,session_1768747436666,2026-01-18T14:46:18.181723
+the walls are dirty,negative,19,session_1768754022425,2026-01-18T16:35:41.243374
+male toilet in floor 1 are dirty,negative,8,session_1768754022425,2026-01-18T16:38:56.217001

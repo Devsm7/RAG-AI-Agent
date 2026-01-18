@@ -30,7 +30,9 @@ async def voice_chat(
             temp_audio_path = temp_audio.name
 
         # Transcribe audio
-        transcription = SpeechToTextService.transcribe_audio(temp_audio_path)
+        stt_service = get_stt_service()
+        result = stt_service.transcribe_file(temp_audio_path)
+        transcription = result.text
 
         # Clean up temp file
         try:

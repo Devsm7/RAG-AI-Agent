@@ -10,14 +10,29 @@ from dataclasses import dataclass
 from typing import Optional
 
 from langchain_ollama import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 
 from twuaqirag.rag.rag_types import ResponseLang
 from twuaqirag.rag.prompts import SYSTEM_PROMPT_EN, SYSTEM_PROMPT_AR
+from twuaqirag.core.config import config
 
 
-# Initialize once (important for performance)
-_llm = ChatOllama(model="llama3.2")
+# Initialize LLMs once (important for performance)
+_llm_english = ChatOllama(model=config.LLM_MODEL)  # For English responses
+
+# For Arabic responses - use Google's Gemini
+_llm_arabic = None
+if config.GOOGLE_API_KEY:
+    _llm_arabic = ChatGoogleGenerativeAI(
+        model=config.GEMINI_MODEL,
+        google_api_key=config.GOOGLE_API_KEY,
+        temperature=0.7,
+        convert_system_message_to_human=True  # Gemini doesn't support system messages natively
+    )
+else:
+    # Fallback to Ollama if no Google API key is provided
+    _llm_arabic = ChatOllama(model=config.LLM_MODEL)
 
 
 @dataclass
@@ -55,6 +70,7 @@ def _build_prompt(response_lang: ResponseLang) -> ChatPromptTemplate:
 async def generate_answer(inp: AnswerInput) -> str:
     """
     Generate answer using LLM based on context & question.
+    Uses Google Gemini for Arabic responses and Ollama for English.
     """
     prompt = _build_prompt(inp.response_lang)
 
@@ -62,7 +78,10 @@ async def generate_answer(inp: AnswerInput) -> str:
     if inp.style_hint:
         context = f"{context}\n\nStyle hint: {inp.style_hint}"
 
-    chain = prompt | _llm
+    # Select the appropriate LLM based on response language
+    llm = _llm_arabic if inp.response_lang == ResponseLang.ARABIC else _llm_english
+    
+    chain = prompt | llm
     result = await chain.ainvoke(
         {
             "question": inp.question,
@@ -70,3 +89,21 @@ async def generate_answer(inp: AnswerInput) -> str:
         }
     )
     return result.content
+
+
+async def translate_to_english(text: str) -> str:
+    """
+    Translate Arabic text to English using Gemini (if available) or Ollama.
+    Used for Cross-Lingual Retrieval (Arabic Query -> English Index).
+    """
+    # Prefer Gemini for translation as it's better at Arabic
+    llm = _llm_arabic if _llm_arabic else _llm_english
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a precise translator. Translate the following Arabic text to English. Output ONLY the translation, no other text."),
+        ("human", "{text}")
+    ])
+    
+    chain = prompt | llm
+    result = await chain.ainvoke({"text": text})
+    return result.content.strip()
