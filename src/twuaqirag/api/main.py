@@ -9,13 +9,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
-from twuaqirag.api.routes import chat, stt, health
+from twuaqirag.api.routes import chat, stt, tts, health
 
 # Initialize FastAPI app
 app = FastAPI(
     title="Twuaiq RAG Assistant",
-    description="Bilingual AI Assistant for Twuaiq Academy",
-    version="2.0.0"
+    description="Bilingual AI Assistant for Twuaiq Academy with Voice Chat and TTS",
+    version="2.1.0"
 )
 
 # CORS middleware
@@ -30,6 +30,7 @@ app.add_middleware(
 # Include routers
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(stt.router, prefix="/api", tags=["speech-to-text"])
+app.include_router(tts.router, prefix="/api", tags=["text-to-speech"])
 app.include_router(health.router, prefix="/api", tags=["health"])
 
 @app.get("/", response_class=HTMLResponse)

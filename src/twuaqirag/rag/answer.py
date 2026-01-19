@@ -19,7 +19,12 @@ from twuaqirag.core.config import config
 
 
 # Initialize LLMs once (important for performance)
-_llm_english = ChatOllama(model=config.LLM_MODEL)  # For English responses
+_llm_english = ChatOpenAI(
+        model=config.OPENAI_MODEL,
+        openai_api_key=config.OPENAI_API_KEY,
+        temperature=0.7,
+    )
+#ChatOllama(model=config.LLM_MODEL)  # For English responses
 
 # For Arabic responses - use OpenAI (GPT-4o-mini) or Fallback
 _llm_arabic = None
